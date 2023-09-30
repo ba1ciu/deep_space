@@ -18,6 +18,7 @@ use cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastMode;
 use cosmos_sdk_proto::cosmos::tx::v1beta1::BroadcastTxRequest;
 use cosmos_sdk_proto::cosmos::tx::v1beta1::SimulateRequest;
 use cosmos_sdk_proto::cosmos::tx::v1beta1::SimulateResponse;
+use cosmos_sdk_proto::cosmos::tx::v1beta1::Tip;
 use cosmos_sdk_proto::cosmos::{
     base::abci::v1beta1::TxResponse, tx::v1beta1::service_client::ServiceClient as TxServiceClient,
 };
@@ -140,15 +141,16 @@ impl Contact {
         messages: &[Msg],
         memo: Option<String>,
         fee_coin: &[Coin],
+        tip: Option<Tip>,
         wait_timeout: Option<Duration>,
         private_key: impl PrivateKey,
     ) -> Result<TxResponse, CosmosGrpcError> {
         let our_address = private_key.to_address(&self.chain_prefix).unwrap();
 
         let fee = self
-            .get_fee_info(messages, fee_coin, private_key.clone())
+            .get_fee_info(messages, fee_coin, tip.clone(), private_key.clone())
             .await?;
-        let args = self.get_message_args(our_address, fee).await?;
+        let args = self.get_message_args(our_address, fee, tip).await?;
         trace!("got optional tx info");
 
         self.send_message_with_args(messages, memo, args, wait_timeout, private_key)
@@ -188,10 +190,11 @@ impl Contact {
         &self,
         messages: &[Msg],
         fee_token: &[Coin],
+        tip: Option<Tip>,
         private_key: impl PrivateKey,
     ) -> Result<Fee, CosmosGrpcError> {
         let gas_info = self
-            .simulate_tx(messages, Some(fee_token), private_key.clone())
+            .simulate_tx(messages, Some(fee_token), tip, private_key.clone())
             .await?
             .gas_info
             .unwrap();
@@ -240,6 +243,7 @@ impl Contact {
         &self,
         messages: &[Msg],
         fee_amount: Option<&[Coin]>,
+        tip: Option<Tip>,
         private_key: impl PrivateKey,
     ) -> Result<SimulateResponse, CosmosGrpcError> {
         let our_address = private_key.to_address(&self.chain_prefix).unwrap();
@@ -254,7 +258,7 @@ impl Contact {
             payer: None,
         };
 
-        let args = self.get_message_args(our_address, fee_obj).await?;
+        let args = self.get_message_args(our_address, fee_obj, tip).await?;
 
         let tx_bytes = private_key.sign_std_msg(messages, args, MEMO)?;
 
@@ -305,6 +309,7 @@ impl Contact {
         &self,
         coin: Coin,
         fee_coin: Option<Coin>,
+        tip: Option<Tip>,
         destination: Address,
         wait_timeout: Option<Duration>,
         private_key: impl PrivateKey,
@@ -322,6 +327,7 @@ impl Contact {
             &[msg],
             None,
             &[fee_coin.unwrap_or_default()],
+            tip,
             wait_timeout,
             private_key,
         )
@@ -456,7 +462,7 @@ mod tests {
         };
 
         let res = contact
-            .send_coins(coin, Some(fee), destination, Some(TIMEOUT), private_key)
+            .send_coins(coin, Some(fee), None, destination, Some(TIMEOUT), private_key)
             .await;
         assert!(res.is_ok())
     }

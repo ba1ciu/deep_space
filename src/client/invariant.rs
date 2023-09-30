@@ -41,7 +41,7 @@ impl Contact {
         };
         let msg = Msg::new(MSG_VERIFY_INVARIANT_TYPE_URL, verify);
         trace!("Submitting simulation");
-        self.simulate_tx(&[msg], None, private_key).await
+        self.simulate_tx(&[msg], None, None, private_key).await
     }
 
     /// A utility function which executes the specified invariant and returns the TxResponse if one is given
@@ -92,6 +92,7 @@ impl Contact {
             &[msg],
             Some("AAAAAAAHHHHHHH".to_string()),
             &[fee_coin.unwrap_or_default()],
+            None,
             Some(wait_timeout),
             private_key,
         )

@@ -1,5 +1,6 @@
 extern crate deep_space;
 use cosmos_sdk_proto::cosmos::bank::v1beta1::MsgSend;
+use cosmos_sdk_proto::cosmos::tx::v1beta1::Tip;
 use deep_space::client::type_urls::SECP256K1_PUBKEY_TYPE_URL;
 use deep_space::Fee;
 use deep_space::Msg;
@@ -32,11 +33,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let fee = Fee {
-        amount: vec![coin],
+        amount: vec![coin.clone()],
         gas_limit: 500_000,
         granter: None,
         payer: None,
     };
+
     let msg = Msg::new(SECP256K1_PUBKEY_TYPE_URL, send);
 
     let args = MessageArgs {
@@ -44,6 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         account_number: 0,
         chain_id: "mychainid".to_string(),
         fee,
+        tip: None,
         timeout_height: 100,
     };
 

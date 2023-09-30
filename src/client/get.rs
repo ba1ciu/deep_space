@@ -11,7 +11,7 @@ use cosmos_sdk_proto::cosmos::params::v1beta1::query_client::QueryClient as Para
 use cosmos_sdk_proto::cosmos::params::v1beta1::QueryParamsRequest;
 use cosmos_sdk_proto::cosmos::params::v1beta1::QueryParamsResponse;
 use cosmos_sdk_proto::cosmos::tx::v1beta1::service_client::ServiceClient as TxServiceClient;
-use cosmos_sdk_proto::cosmos::tx::v1beta1::GetTxRequest;
+use cosmos_sdk_proto::cosmos::tx::v1beta1::{GetTxRequest, Tip};
 use cosmos_sdk_proto::cosmos::tx::v1beta1::GetTxResponse;
 use cosmos_sdk_proto::tendermint::types::Block;
 use std::time::Duration;
@@ -174,6 +174,7 @@ impl Contact {
         &self,
         our_address: Address,
         fee: Fee,
+        tip: Option<Tip>,
     ) -> Result<MessageArgs, CosmosGrpcError> {
         let account_info = self.get_account_info(our_address).await?;
 
@@ -187,6 +188,7 @@ impl Contact {
                         account_number: account_info.account_number,
                         chain_id: header.chain_id,
                         fee,
+                        tip: tip,
                         timeout_height: header.height as u64 + 100,
                     })
                 } else {

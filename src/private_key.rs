@@ -7,7 +7,7 @@ use crate::utils::hex_str_to_bytes;
 use crate::{coin::Fee, Address};
 use crate::{error::*, utils::contains_non_hex_chars};
 use cosmos_sdk_proto::cosmos::crypto::secp256k1::PubKey as ProtoSecp256k1Pubkey;
-use cosmos_sdk_proto::cosmos::tx::v1beta1::Tx;
+use cosmos_sdk_proto::cosmos::tx::v1beta1::{Tx, Tip};
 use cosmos_sdk_proto::cosmos::tx::v1beta1::{
     mode_info, AuthInfo, ModeInfo, SignDoc, SignerInfo, TxBody, TxRaw,
 };
@@ -30,10 +30,11 @@ thread_local! {
 pub const DEFAULT_COSMOS_HD_PATH: &str = "m/44'/118'/0'/0/0";
 pub const DEFAULT_ETHEREUM_HD_PATH: &str = "m/44'/60'/0'/0/0";
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct MessageArgs {
     pub sequence: u64,
     pub fee: Fee,
+    pub tip: Option<Tip>,
     pub timeout_height: u64,
     pub chain_id: String,
     pub account_number: u64,
@@ -624,6 +625,7 @@ fn build_unfinished_tx<P: prost::Message>(
     let auth_info = AuthInfo {
         signer_infos: vec![signer_info],
         fee: Some(args.fee.into()),
+        tip: None,
     };
 
     // Protobuf serialization of `AuthInfo`

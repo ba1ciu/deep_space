@@ -114,7 +114,7 @@ impl Contact {
         };
 
         let msg = Msg::new(MSG_VOTE_TYPE_URL, vote);
-        self.send_message(&[msg], None, &[fee], wait_timeout, private_key)
+        self.send_message(&[msg], None, &[fee], None, wait_timeout, private_key)
             .await
     }
 
@@ -135,7 +135,7 @@ impl Contact {
         };
 
         let msg = Msg::new(MSG_SUBMIT_PROPOSAL_TYPE_URL, proposal);
-        self.send_message(&[msg], None, &[fee], wait_timeout, private_key)
+        self.send_message(&[msg], None, &[fee], None, wait_timeout, private_key)
             .await
     }
 
